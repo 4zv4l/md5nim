@@ -40,6 +40,7 @@ proc main() =
         server   = newSocket()
 
     addHandler(newColoredLogger())
+    info(&"Loaded {hashes.len} md5 hash")
     setSockOpt(server, OptReuseAddr, true)
     try: bindAddr(server, Port(port), ip) except: quit "couldnt bind the address"
     listen(server, 32)
@@ -53,5 +54,6 @@ proc main() =
         info(&"New Client on {getPeerAddr client}")
         if handle(client, hash):
             discard pop(hashes)
+    info(&"no more hash to crack, bye :)")
 
 main()

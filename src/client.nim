@@ -7,7 +7,7 @@ import std/[
     os,
     net,
     strformat, strutils, sequtils,
-    logging
+    logging, times
 ]
 import checksums/md5
 import colored_logger
@@ -26,8 +26,9 @@ proc raw_force*(str: var string, hash: string, str_pos: uint): string =
     ## using `CHARSET` and for each generated password of the correct length
     ## check if the md5sum match `hash`
     if str_pos == BRUTE_FORCE_LEN:
-        #debug(&"Trying with {repr str}")
-        if checkMD5(str, hash): return str
+        if checkMD5(str, hash):
+            info(&"{repr hash}  {repr str}")
+            return str
         return ""
     for i in 0..CHARSET.len-1:
         str[str_pos] = CHARSET[i]
@@ -66,16 +67,16 @@ proc main() =
     let
         ip       = paramStr(1)
         port     = try: parseUInt(paramStr(2)) except: quit "wrong port format"
-        file     = try: open(paramStr(3)) except: quit "couldnt open the file"
+        stime    = epochTime()
     var
-        wordlist = file.lines.toSeq()
+        wordlist = try: paramStr(3).lines.toSeq() except: quit "couldnt open the file"
         server   = newSocket()
     
-    close(file)
     addHandler(newColoredLogger())
     try: connect(server, ip, Port(port)) except: quit "couldnt connect to the server"
     info(&"Connected to {getPeerAddr server}")
 
     handle(server, wordlist)
+    info(&"Took {epochTime() - stime:.3f}s")
 
 main()
